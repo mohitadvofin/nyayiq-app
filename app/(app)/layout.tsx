@@ -1,6 +1,9 @@
+export const dynamic = 'force-dynamic'
+
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import SignOutButton from '@/components/SignOutButton'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -8,132 +11,92 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('full_name, plan, ai_summaries_used_this_month')
-    .eq('id', user.id)
-    .single()
-
-  const name = profile?.full_name || user.email || 'User'
+  const name = user.user_metadata?.full_name || user.email || 'User'
   const initials = name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()
-  const plan = profile?.plan || 'free'
-  const used = profile?.ai_summaries_used_this_month || 0
 
   return (
-    <div style={{ minHeight: '100vh', display: 'grid', gridTemplateColumns: '240px 1fr' }}>
-      {/* Sidebar */}
+    <div style={{ minHeight: '100vh', display: 'grid', gridTemplateColumns: '220px 1fr' }}>
       <aside style={{
-        background: 'var(--paper)', borderRight: '1px solid var(--line)',
-        padding: '2rem 1.5rem', display: 'flex', flexDirection: 'column',
-        gap: '2rem', position: 'sticky', top: 0, height: '100vh', overflowY: 'auto'
+        background: '#faf6ee', borderRight: '1px solid #c9b990',
+        padding: '1.5rem', display: 'flex', flexDirection: 'column',
+        gap: '1.5rem', position: 'sticky', top: 0, height: '100vh', overflowY: 'auto'
       }}>
         <Link href="/app" style={{
-          fontFamily: 'Fraunces, serif', fontWeight: 600, fontSize: '1.25rem',
-          display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', color: 'var(--ink)'
+          fontFamily: 'Fraunces, serif', fontWeight: 600, fontSize: '1.2rem',
+          textDecoration: 'none', color: '#2b1f15',
+          display: 'flex', alignItems: 'center', gap: '0.5rem'
         }}>
           <div style={{
-            width: 26, height: 26, background: 'var(--orange-deep)', borderRadius: 4,
-            display: 'grid', placeItems: 'center', color: 'var(--cream)',
-            fontFamily: 'Fraunces, serif', fontStyle: 'italic', fontWeight: 700, fontSize: '0.8rem'
+            width: 26, height: 26, background: '#8f3615', borderRadius: 4,
+            display: 'grid', placeItems: 'center', color: '#f5ecd9',
+            fontStyle: 'italic', fontWeight: 700, fontSize: '0.8rem'
           }}>N</div>
-          Nyay<span style={{ color: 'var(--orange-deep)', fontStyle: 'italic' }}>IQ</span>
+          Nyay<span style={{ color: '#8f3615', fontStyle: 'italic' }}>IQ</span>
         </Link>
 
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-          <div style={sectionTitle}>Workspace</div>
-          <SidebarLink href="/app" icon="◇" label="Dashboard" />
-          <SidebarLink href="/app/search" icon="⌕" label="Search" />
-          <SidebarLink href="/app/upload" icon="↑" label="Upload PDF" />
-          <SidebarLink href="/app/bookmarks" icon="★" label="Bookmarks" />
+          <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.62rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#8a7560', padding: '0 0.5rem', marginBottom: '0.5rem' }}>
+            Workspace
+          </div>
+          {[
+            { href: '/app', icon: '◇', label: 'Dashboard' },
+            { href: '/app/search', icon: '⌕', label: 'Search' },
+            { href: '/app/upload', icon: '↑', label: 'Upload PDF' },
+            { href: '/app/bookmarks', icon: '★', label: 'Bookmarks' },
+          ].map(({ href, icon, label }) => (
+            <Link key={href} href={href} style={{
+              padding: '0.55rem 0.75rem', borderRadius: 4,
+              fontFamily: 'Inter Tight, sans-serif', fontSize: '0.88rem',
+              color: '#5a4532', textDecoration: 'none',
+              display: 'flex', alignItems: 'center', gap: '0.75rem'
+            }}>
+              <span style={{ fontFamily: 'Fraunces, serif', fontStyle: 'italic', width: 16 }}>{icon}</span>
+              {label}
+            </Link>
+          ))}
         </nav>
 
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-          <div style={sectionTitle}>Account</div>
-          <SidebarLink href="/app/settings" icon="⚙" label="Settings" />
-          <SidebarLink href="/app/billing" icon="₹" label="Billing" />
-          <SidebarLink href="/app/usage" icon="※" label="Usage" />
+          <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.62rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#8a7560', padding: '0 0.5rem', marginBottom: '0.5rem' }}>
+            Account
+          </div>
+          {[
+            { href: '/app/settings', icon: '⚙', label: 'Settings' },
+            { href: '/app/billing', icon: '₹', label: 'Billing' },
+          ].map(({ href, icon, label }) => (
+            <Link key={href} href={href} style={{
+              padding: '0.55rem 0.75rem', borderRadius: 4,
+              fontFamily: 'Inter Tight, sans-serif', fontSize: '0.88rem',
+              color: '#5a4532', textDecoration: 'none',
+              display: 'flex', alignItems: 'center', gap: '0.75rem'
+            }}>
+              <span style={{ fontFamily: 'Fraunces, serif', fontStyle: 'italic', width: 16 }}>{icon}</span>
+              {label}
+            </Link>
+          ))}
         </nav>
 
-        {/* Usage indicator for free users */}
-        {plan === 'free' && (
+        <div style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid #e5d9bc', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <div style={{
-            background: 'rgba(184,74,30,0.06)', border: '1px solid var(--line)',
-            borderRadius: 6, padding: '1rem'
-          }}>
-            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.65rem', color: 'var(--orange-deep)', letterSpacing: '0.15em', marginBottom: '0.5rem' }}>
-              AI SUMMARIES
+            width: 34, height: 34, background: '#8f3615', color: '#f5ecd9',
+            borderRadius: '50%', display: 'grid', placeItems: 'center',
+            fontFamily: 'Fraunces, serif', fontStyle: 'italic', fontSize: '0.85rem'
+          }}>{initials}</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontFamily: 'Inter Tight, sans-serif', fontSize: '0.82rem', fontWeight: 500, color: '#2b1f15', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {name}
             </div>
-            <div style={{ fontFamily: 'Fraunces, serif', fontSize: '1.5rem', color: 'var(--ink)', fontWeight: 500 }}>
-              {used}<span style={{ fontSize: '1rem', color: 'var(--ink-3)' }}>/5</span>
+            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.6rem', color: '#8f3615', letterSpacing: '0.1em' }}>
+              FREE PLAN
             </div>
-            <div style={{ fontFamily: 'EB Garamond, serif', fontSize: '0.85rem', color: 'var(--ink-3)', fontStyle: 'italic', margin: '0.5rem 0' }}>
-              this month
-            </div>
-            <Link href="/app/billing" style={{
-              display: 'block', textAlign: 'center', padding: '0.5rem',
-              background: 'var(--orange-deep)', color: 'var(--cream)',
-              borderRadius: 4, fontFamily: 'Inter Tight, sans-serif',
-              fontSize: '0.8rem', fontWeight: 500, textDecoration: 'none'
-            }}>
-              Upgrade to Pro →
-            </Link>
           </div>
-        )}
-
-        {/* User profile */}
-        <div style={{ marginTop: 'auto', paddingTop: '1.5rem', borderTop: '1px solid var(--line-faint)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem', borderRadius: 4 }}>
-            <div style={{
-              width: 36, height: 36, background: 'var(--orange-deep)', color: 'var(--cream)',
-              borderRadius: '50%', display: 'grid', placeItems: 'center',
-              fontFamily: 'Fraunces, serif', fontStyle: 'italic', fontWeight: 500, fontSize: '0.9rem'
-            }}>{initials}</div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontFamily: 'Inter Tight, sans-serif', fontSize: '0.85rem', fontWeight: 500, color: 'var(--ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {name}
-              </div>
-              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.65rem', color: 'var(--orange-deep)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                {plan} plan
-              </div>
-            </div>
-            <form action="/api/auth/signout" method="post">
-              <button type="submit" style={{
-                background: 'none', border: 'none', color: 'var(--ink-3)',
-                cursor: 'pointer', fontFamily: 'Fraunces, serif', fontSize: '1rem',
-                fontStyle: 'italic', padding: '0.2rem'
-              }} title="Sign out">↪</button>
-            </form>
-          </div>
+          <SignOutButton />
         </div>
       </aside>
 
-      {/* Main content */}
-      <main style={{ minHeight: '100vh', background: 'var(--cream)' }}>
+      <main style={{ background: '#f5ecd9', minHeight: '100vh' }}>
         {children}
       </main>
     </div>
   )
-}
-
-function SidebarLink({ href, icon, label }: { href: string; icon: string; label: string }) {
-  return (
-    <Link href={href} style={{
-      padding: '0.6rem 0.75rem', borderRadius: 4,
-      fontFamily: 'Inter Tight, sans-serif', fontSize: '0.88rem',
-      color: 'var(--ink-2)', textDecoration: 'none',
-      display: 'flex', alignItems: 'center', gap: '0.75rem',
-      transition: 'all 0.15s'
-    }}>
-      <span style={{ fontFamily: 'Fraunces, serif', fontStyle: 'italic', fontSize: '1rem', width: 18, textAlign: 'center' }}>
-        {icon}
-      </span>
-      {label}
-    </Link>
-  )
-}
-
-const sectionTitle: React.CSSProperties = {
-  fontFamily: 'JetBrains Mono, monospace', fontSize: '0.65rem',
-  letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--ink-3)',
-  padding: '0 0.75rem', marginBottom: '0.5rem'
 }
