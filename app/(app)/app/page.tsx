@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import SignOutButton from '@/components/SignOutButton'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -24,11 +25,7 @@ export default async function DashboardPage() {
             Logged in as: {user.email}
           </p>
         </div>
-        <form action="/api/auth/signout" method="post">
-          <button type="submit" style={{ padding: '0.65rem 1.25rem', background: '#8f3615', color: '#f5ecd9', border: 'none', borderRadius: 4, fontFamily: 'Inter Tight, sans-serif', cursor: 'pointer' }}>
-            Sign out
-          </button>
-        </form>
+        <SignOutButton />
       </div>
 
       {/* Status cards */}
