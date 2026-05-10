@@ -4,14 +4,21 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import SignOutButton from '@/components/SignOutButton'
+import type { User } from '@supabase/supabase-js'
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
-  const { data: { user }, error } = await supabase.auth.getUser()
-
-  if (error || !user) {
-    redirect('/login')
+  let user: User | null = null
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase.auth.getUser()
+    if (error) throw error
+    user = data.user
+  } catch (e) {
+    console.error('[DashboardPage] auth check failed', e)
+    redirect('/login?error=auth_check_failed')
   }
+
+  if (!user) redirect('/login')
 
   return (
     <div style={{ padding: '3rem', fontFamily: 'EB Garamond, serif' }}>

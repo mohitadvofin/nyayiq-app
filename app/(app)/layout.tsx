@@ -4,10 +4,19 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import SignOutButton from '@/components/SignOutButton'
+import type { User } from '@supabase/supabase-js'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  let user: User | null = null
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase.auth.getUser()
+    if (error) throw error
+    user = data.user
+  } catch (e) {
+    console.error('[AppLayout] auth check failed', e)
+    redirect('/login?error=auth_check_failed')
+  }
 
   if (!user) redirect('/login')
 

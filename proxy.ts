@@ -35,11 +35,15 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   if ((pathname.startsWith('/app') || pathname.startsWith('/admin')) && !user) {
-    return NextResponse.redirect(new URL('/login', request.url))
+    const redirect = NextResponse.redirect(new URL('/login', request.url))
+    response.cookies.getAll().forEach(c => redirect.cookies.set(c))
+    return redirect
   }
 
   if (user && (pathname === '/login' || pathname === '/signup')) {
-    return NextResponse.redirect(new URL('/app', request.url))
+    const redirect = NextResponse.redirect(new URL('/app', request.url))
+    response.cookies.getAll().forEach(c => redirect.cookies.set(c))
+    return redirect
   }
 
   return response
